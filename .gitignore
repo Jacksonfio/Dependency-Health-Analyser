@@ -10,3 +10,8 @@ build/
 *.db
 .ml/
 .DS_Store
+*.log
+celerybeat-schedule
+_build*
+_up_*
+*.tsbuildinfo
