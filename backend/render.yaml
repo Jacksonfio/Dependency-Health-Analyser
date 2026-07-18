@@ -1,0 +1,20 @@
+services:
+  - type: web
+    name: dephealth-api
+    runtime: python
+    repo: https://github.com/YOUR_USERNAME/YOUR_REPO
+    plan: free
+    region: oregon
+    buildCommand: pip install -r requirements.txt
+    startCommand: uvicorn app.main:app --host 0.0.0.0 --port $PORT
+    envVars:
+      - key: ENVIRONMENT
+        value: production
+      - key: DEBUG
+        value: "false"
+      - key: DATABASE_URL
+        sync: false
+      - key: CORS_ORIGINS
+        value: '["https://dephealth.vercel.app","https://dephealth-git-main-YOUR_USERNAME.vercel.app"]'
+      - key: LOG_LEVEL
+        value: INFO

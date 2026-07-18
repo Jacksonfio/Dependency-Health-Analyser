@@ -1,0 +1,233 @@
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: dep-health
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: dep-health-config
+  namespace: dep-health
+data:
+  ENVIRONMENT: "production"
+  LOG_LEVEL: "INFO"
+  LOG_FORMAT: "json"
+---
+apiVersion: v1
+kind: Secret
+metadata:
+  name: dep-health-secrets
+  namespace: dep-health
+type: Opaque
+stringData:
+  POSTGRES_PASSWORD: ""
+  NEO4J_PASSWORD: ""
+  GITHUB_TOKEN: ""
+  NVD_API_KEY: ""
+  OPENAI_API_KEY: ""
+  JWT_SECRET: ""
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: dep-health-backend
+  namespace: dep-health
+spec:
+  replicas: 3
+  selector:
+    matchLabels:
+      app: dep-health-backend
+  template:
+    metadata:
+      labels:
+        app: dep-health-backend
+      annotations:
+        prometheus.io/scrape: "true"
+        prometheus.io/port: "8000"
+        prometheus.io/path: "/metrics"
+    spec:
+      containers:
+        - name: backend
+          image: dep-health/backend:latest
+          ports:
+            - containerPort: 8000
+          envFrom:
+            - configMapRef:
+                name: dep-health-config
+            - secretRef:
+                name: dep-health-secrets
+          resources:
+            requests:
+              cpu: "500m"
+              memory: "512Mi"
+            limits:
+              cpu: "2000m"
+              memory: "2Gi"
+          livenessProbe:
+            httpGet:
+              path: /health
+              port: 8000
+            initialDelaySeconds: 30
+            periodSeconds: 10
+          readinessProbe:
+            httpGet:
+              path: /health
+              port: 8000
+            initialDelaySeconds: 5
+            periodSeconds: 5
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: dep-health-backend
+  namespace: dep-health
+spec:
+  selector:
+    app: dep-health-backend
+  ports:
+    - port: 8000
+      targetPort: 8000
+  type: ClusterIP
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: dep-health-frontend
+  namespace: dep-health
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: dep-health-frontend
+  template:
+    metadata:
+      labels:
+        app: dep-health-frontend
+    spec:
+      containers:
+        - name: frontend
+          image: dep-health/frontend:latest
+          ports:
+            - containerPort: 3000
+          resources:
+            requests:
+              cpu: "250m"
+              memory: "256Mi"
+            limits:
+              cpu: "1000m"
+              memory: "1Gi"
+          livenessProbe:
+            httpGet:
+              path: /
+              port: 3000
+            initialDelaySeconds: 10
+            periodSeconds: 10
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: dep-health-frontend
+  namespace: dep-health
+spec:
+  selector:
+    app: dep-health-frontend
+  ports:
+    - port: 3000
+      targetPort: 3000
+  type: ClusterIP
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: dep-health-celery-worker
+  namespace: dep-health
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: dep-health-celery-worker
+  template:
+    metadata:
+      labels:
+        app: dep-health-celery-worker
+    spec:
+      containers:
+        - name: worker
+          image: dep-health/backend:latest
+          command: ["celery", "-A", "app.tasks.celery_app", "worker", "--loglevel=info", "--concurrency=4"]
+          envFrom:
+            - configMapRef:
+                name: dep-health-config
+            - secretRef:
+                name: dep-health-secrets
+          resources:
+            requests:
+              cpu: "500m"
+              memory: "512Mi"
+            limits:
+              cpu: "1000m"
+              memory: "1Gi"
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: dep-health-celery-beat
+  namespace: dep-health
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: dep-health-celery-beat
+  template:
+    metadata:
+      labels:
+        app: dep-health-celery-beat
+    spec:
+      containers:
+        - name: beat
+          image: dep-health/backend:latest
+          command: ["celery", "-A", "app.tasks.celery_app", "beat", "--loglevel=info"]
+          envFrom:
+            - configMapRef:
+                name: dep-health-config
+            - secretRef:
+                name: dep-health-secrets
+          resources:
+            requests:
+              cpu: "100m"
+              memory: "128Mi"
+            limits:
+              cpu: "500m"
+              memory: "512Mi"
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: dep-health-ingress
+  namespace: dep-health
+  annotations:
+    nginx.ingress.kubernetes.io/rewrite-target: /
+    cert-manager.io/cluster-issuer: "letsencrypt-prod"
+spec:
+  tls:
+    - hosts:
+        - dep-health.example.com
+      secretName: dep-health-tls
+  rules:
+    - host: dep-health.example.com
+      http:
+        paths:
+          - path: /api
+            pathType: Prefix
+            backend:
+              service:
+                name: dep-health-backend
+                port:
+                  number: 8000
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: dep-health-frontend
+                port:
+                  number: 3000

@@ -1,0 +1,25 @@
+# Node / frontend
+**/node_modules
+**/.next
+**/npm-debug.log*
+
+# Python / backend
+**/__pycache__
+**/*.pyc
+**/*.pyo
+**/.pytest_cache
+**/.mypy_cache
+**/.ruff_cache
+**/*.egg-info
+
+# Logs
+**/*.log
+
+# VCS / IDE
+**/.git
+**/.gitignore
+**/.vscode
+**/.idea
+
+# Build artifacts
+**/tsconfig.tsbuildinfo

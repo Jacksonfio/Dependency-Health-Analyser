@@ -1,0 +1,1 @@
+from app.services.collectors.registry_collectors import NPMCollector

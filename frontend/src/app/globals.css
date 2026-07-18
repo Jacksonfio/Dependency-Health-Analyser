@@ -1,0 +1,55 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  body {
+    @apply bg-surface text-stone-100 antialiased;
+    font-feature-settings: "rlig" 1, "calt" 1;
+  }
+}
+
+@layer components {
+  .card {
+    @apply bg-card border border-border rounded-xl shadow-warm;
+  }
+  .card-hover {
+    @apply card bg-gradient-card transition-all duration-300 hover:bg-gradient-card-hover hover:border-stone-700 hover:shadow-warm-lg;
+  }
+  .card-accent {
+    @apply card border-l-2 border-l-amber-500;
+  }
+  .stat-value {
+    @apply text-lg font-bold;
+  }
+  .badge {
+    @apply inline-flex items-center px-2 py-0.5 rounded text-[9px] font-medium uppercase tracking-wider;
+  }
+  .badge-critical {
+    @apply badge bg-red-500/15 text-red-400 border border-red-500/20;
+  }
+  .badge-high {
+    @apply badge bg-orange-500/15 text-orange-400 border border-orange-500/20;
+  }
+  .badge-medium {
+    @apply badge bg-yellow-500/15 text-yellow-400 border border-yellow-500/20;
+  }
+  .badge-low {
+    @apply badge bg-emerald-500/15 text-emerald-400 border border-emerald-500/20;
+  }
+  .btn-primary {
+    @apply px-4 py-2 bg-amber-500 hover:bg-amber-400 text-black text-xs font-semibold rounded-lg transition-colors;
+  }
+  .btn-secondary {
+    @apply px-4 py-2 bg-stone-800 hover:bg-stone-700 text-stone-200 text-xs font-medium rounded-lg border border-stone-700 transition-colors;
+  }
+}
+
+@layer utilities {
+  .custom-scrollbar::-webkit-scrollbar { width: 4px; }
+  .custom-scrollbar::-webkit-scrollbar-track { background: transparent; }
+  .custom-scrollbar::-webkit-scrollbar-thumb { background: #444; border-radius: 99px; }
+  .text-gradient-amber { background: linear-gradient(135deg, #f59e0b, #f97316); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+  .text-gradient-rose { background: linear-gradient(135deg, #f43f5e, #e11d48); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+  .border-gradient { border-image: linear-gradient(135deg, rgba(245,158,11,0.3), rgba(244,63,94,0.2)) 1; }
+}
