@@ -1,6 +1,6 @@
 # DepHealth - Predictive Dependency Health Monitoring
 
-> Stop reacting to vulnerabilities. Start predicting them.
+> Stop reacting to vulnerabilities. Start predicting them
 
 DepHealth is a predictive dependency health platform that forecasts future risk trajectories for your software dependencies. Unlike traditional scanners that only tell you about current vulnerabilities, DepHealth predicts which dependencies will become problematic in the next 90 days and provides prioritized upgrade roadmaps.
 
